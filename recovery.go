@@ -25,12 +25,13 @@ func trace(message string) string {
 
 		// Format the function information and source code location information
 		// into a string and append it to the builder object
-		builder.WriteString(fmt.Sprintf("\n\t%s:%d", file, line))
+		fmt.Fprintf(&builder, "\n\t%s:%d", file, line)
 	}
 
 	return builder.String()
 }
 
+// Recovery returns a middleware handler that recovers from any panics and writes a 500 error.
 func Recovery() HandlerFunc {
 	return func(c *Context) {
 		defer func() {

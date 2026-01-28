@@ -114,6 +114,7 @@ func (engine *Engine) Run(addr string) (err error) {
 	return http.ListenAndServe(addr, engine)
 }
 
+// RunGracefully starts the HTTP server and handlers graceful shutdown on interrupt signals.
 func (engine *Engine) RunGracefully(addr string) error {
 	srv := &http.Server{
 		Addr:    addr,
@@ -141,6 +142,7 @@ func (engine *Engine) RunGracefully(addr string) error {
 	return nil
 }
 
+// ServeHTTP conforms to the http.Handler interface.
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var middlewares []HandlerFunc
 	for _, group := range engine.groups {
@@ -170,7 +172,7 @@ func (group *RouterGroup) createStaticHandler(relativePath string, fs http.FileS
 	}
 }
 
-// Static is serve static files
+// Static regisiters a route to serve static files from the specified root directory.
 func (group *RouterGroup) Static(relativePath string, root string) {
 	handler := group.createStaticHandler(relativePath, http.Dir(root))
 	urlPattern := path.Join(relativePath, "/*filepath")
@@ -180,10 +182,12 @@ func (group *RouterGroup) Static(relativePath string, root string) {
 
 // for custom render function
 
+// SetFuncMap sets a custom template.FuncMap for the Engine.
 func (engine *Engine) SetFuncMap(funcMap template.FuncMap) {
 	engine.funcMap = funcMap
 }
 
+// LoadHTMLGlob loads HTML templates matching the specified pattern.
 func (engine *Engine) LoadHTMLGlob(pattern string) {
 	engine.htmlTemplates = template.Must(template.New("").Funcs(engine.funcMap).ParseGlob(pattern))
 }

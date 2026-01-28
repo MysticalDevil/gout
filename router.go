@@ -17,7 +17,7 @@ func newRouter() *router {
 	}
 }
 
-// Only one * is allowed
+// parsePattern parses a route pattern into parts.
 func parsePattern(pattern string) []string {
 	vs := strings.Split(pattern, "/")
 
@@ -70,6 +70,7 @@ func (r *router) getRoute(method string, path string) (*node, map[string]string)
 	return nil, nil
 }
 
+// handle processes the request by finding the matching route and executing the handlers.
 func (r *router) handle(c *Context) {
 	n, params := r.getRoute(c.Method, c.Path)
 	if n != nil {

@@ -13,7 +13,7 @@ type node struct {
 	isWild   bool    // exact match or not, true when containing : and *
 }
 
-// The first node that matches successfully, for insertion
+// matchChild finds the first child node that matches the given part.
 func (n *node) matchChild(part string) *node {
 	for _, child := range n.children {
 		if child.part == part && child.isWild {
@@ -23,7 +23,7 @@ func (n *node) matchChild(part string) *node {
 	return nil
 }
 
-// All nodes that match successfully for finding
+// matchChildren finds all child nodes that match the given part.
 func (n *node) matchChildren(part string) iter.Seq[*node] {
 	return func(yield func(*node) bool) {
 		for _, child := range n.children {
@@ -36,6 +36,7 @@ func (n *node) matchChildren(part string) iter.Seq[*node] {
 	}
 }
 
+// insert adds a new route pattern to the trie.
 func (n *node) insert(pattern string, parts []string, height int) {
 	if len(parts) == height {
 		n.pattern = pattern
@@ -51,6 +52,7 @@ func (n *node) insert(pattern string, parts []string, height int) {
 	child.insert(pattern, parts, height+1)
 }
 
+// search finds the node matching the given path parts.
 func (n *node) search(parts []string, height int) *node {
 	if len(parts) == height || strings.HasPrefix(n.part, "*") {
 		if n.pattern == "" {

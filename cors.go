@@ -2,6 +2,7 @@ package gout
 
 import "net/http"
 
+// CORS returns a middleware handler that enables Cross-Origin Resources Sharing.
 func CORS() HandlerFunc {
 	return func(c *Context) {
 		c.SetHeader("Access-Control-Allow-Origin", "*")

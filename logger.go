@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// FormatterType defines the type of log formatting.
 type FormatterType int
 
 const (
@@ -13,10 +14,12 @@ const (
 	JSONFormatter
 )
 
+// LoggerConfig defines the configuration for the Logger middleware.
 type LoggerConfig struct {
 	Formatter FormatterType
 }
 
+// Logger returns a middleware handler that logs HTTP requests.
 func Logger(configs ...LoggerConfig) HandlerFunc {
 	cfg := LoggerConfig{
 		Formatter: TextFormatter,
