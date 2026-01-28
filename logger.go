@@ -6,8 +6,35 @@ import (
 	"time"
 )
 
-func Logger() HandlerFunc {
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+type FormatterType int
+
+const (
+	TextFormatter FormatterType = iota
+	JSONFormatter
+)
+
+type LoggerConfig struct {
+	Formatter FormatterType
+}
+
+func Logger(configs ...LoggerConfig) HandlerFunc {
+	cfg := LoggerConfig{
+		Formatter: TextFormatter,
+	}
+
+	if len(configs) > 0 {
+		cfg = configs[0]
+	}
+
+	var handler slog.Handler
+	switch cfg.Formatter {
+	case JSONFormatter:
+		handler = slog.NewJSONHandler(os.Stdout, nil)
+	default:
+		handler = slog.NewTextHandler(os.Stdout, nil)
+	}
+
+	logger := slog.New(handler)
 
 	return func(c *Context) {
 		// Start timer
@@ -26,7 +53,7 @@ func Logger() HandlerFunc {
 			),
 			slog.String("path", c.Path),
 			slog.Duration("latency", latency),
-			slog.String("ip", c.Req.RemoteAddr),
+			slog.String("ip", c.ClientIP()),
 		)
 	}
 }

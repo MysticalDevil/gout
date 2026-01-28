@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type H map[string]any
@@ -97,6 +98,44 @@ func (c *Context) HTML(code int, name string, data any) {
 	if err := c.engine.htmlTemplates.ExecuteTemplate(c.Writer, name, data); err != nil {
 		c.Fail(http.StatusInternalServerError, err.Error())
 	}
+}
+
+func (c *Context) ClientIP() string {
+	if ip := c.Req.Header.Get("X-Forwarded-For"); ip != "" {
+		if before, _, found := strings.Cut(ip, ","); found {
+			return before
+		}
+		return ip
+	}
+	if ip := c.Req.Header.Get("X-Real-Ip"); ip != "" {
+		return ip
+	}
+	return c.Req.RemoteAddr
+}
+
+func (c *Context) SetCookie(
+	name, value string,
+	maxAge int,
+	path, domain string,
+	secure, httpOnly bool,
+) {
+	if path == "" {
+		path = "/"
+	}
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     name,
+		Value:    value,
+		MaxAge:   maxAge,
+		Path:     path,
+		Domain:   domain,
+		SameSite: http.SameSiteDefaultMode,
+		Secure:   secure,
+		HttpOnly: httpOnly,
+	})
+}
+
+func (c *Context) File(filepath string) {
+	http.ServeFile(c.Writer, c.Req, filepath)
 }
 
 func BindJSON[T any](c *Context) (T, error) {

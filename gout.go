@@ -2,11 +2,17 @@
 package gout
 
 import (
+	"context"
 	"html/template"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
+	"os/signal"
 	"path"
 	"strings"
+	"syscall"
+	"time"
 )
 
 // HandlerFunc defines the request handler used by gout
@@ -16,7 +22,7 @@ type HandlerFunc func(c *Context)
 type RouterGroup struct {
 	prefix      string
 	middlewares []HandlerFunc // support middleware
-	parent      *RouterGroup  //support nesting
+	parent      *RouterGroup  // support nesting
 	engine      *Engine       // all groups share an Engine instance
 }
 
@@ -73,6 +79,31 @@ func (group *RouterGroup) POST(pattern string, handler HandlerFunc) {
 	group.addRoute("POST", pattern, handler)
 }
 
+// DELETE defines the method to add DELETE request
+func (group *RouterGroup) DELETE(pattern string, handler HandlerFunc) {
+	group.addRoute("DELETE", pattern, handler)
+}
+
+// PUT defines the method to add PUT request
+func (group *RouterGroup) PUT(pattern string, handler HandlerFunc) {
+	group.addRoute("PUT", pattern, handler)
+}
+
+// PATCH defines the method to add PATCH request
+func (group *RouterGroup) PATCH(pattern string, handler HandlerFunc) {
+	group.addRoute("PATCH", pattern, handler)
+}
+
+// OPTIONS defines the method to add OPTIONS request
+func (group *RouterGroup) OPTIONS(pattern string, handler HandlerFunc) {
+	group.addRoute("PUT", pattern, handler)
+}
+
+// HEAD defines the method to add HEAD request
+func (group *RouterGroup) HEAD(pattern string, handler HandlerFunc) {
+	group.addRoute("HEAD", pattern, handler)
+}
+
 // Use is defined to add middleware to the group
 func (group *RouterGroup) Use(middleware ...HandlerFunc) {
 	group.middlewares = append(group.middlewares, middleware...)
@@ -81,6 +112,33 @@ func (group *RouterGroup) Use(middleware ...HandlerFunc) {
 // Run defines the method to add POST request
 func (engine *Engine) Run(addr string) (err error) {
 	return http.ListenAndServe(addr, engine)
+}
+
+func (engine *Engine) RunGracefully(addr string) error {
+	srv := &http.Server{
+		Addr:    addr,
+		Handler: engine,
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("listen", "error", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	slog.Info("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		return err
+	}
+	slog.Info("Server exiting")
+	return nil
 }
 
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
