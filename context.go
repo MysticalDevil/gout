@@ -111,14 +111,14 @@ func BindJSON[T any](c *Context) (T, error) {
 	return t, nil
 }
 
-type DataResq[T any] struct {
+type DataResp[T any] struct {
 	Code int    `json:"code"`
 	Msg  string `json:"msg"`
 	Data T      `json:"data"`
 }
 
 func Success[T any](c *Context, data T) {
-	resp := DataResq[T]{
+	resp := DataResp[T]{
 		Code: 0,
 		Msg:  "success",
 		Data: data,
