@@ -1,6 +1,9 @@
 package gout
 
-import "strings"
+import (
+	"iter"
+	"strings"
+)
 
 // Tree node
 type node struct {
@@ -21,14 +24,16 @@ func (n *node) matchChild(part string) *node {
 }
 
 // All nodes that match successfully for finding
-func (n *node) matchChildren(part string) []*node {
-	nodes := make([]*node, 0)
-	for _, child := range n.children {
-		if child.part == part || child.isWild {
-			nodes = append(nodes, child)
+func (n *node) matchChildren(part string) iter.Seq[*node] {
+	return func(yield func(*node) bool) {
+		for _, child := range n.children {
+			if child.part == part || child.isWild {
+				if !yield(child) {
+					return
+				}
+			}
 		}
 	}
-	return nodes
 }
 
 func (n *node) insert(pattern string, parts []string, height int) {
@@ -55,9 +60,8 @@ func (n *node) search(parts []string, height int) *node {
 	}
 
 	part := parts[height]
-	children := n.matchChildren(part)
 
-	for _, child := range children {
+	for child := range n.matchChildren(part) {
 		result := child.search(parts, height+1)
 		if result != nil {
 			return result

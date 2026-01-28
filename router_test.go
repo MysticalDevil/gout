@@ -2,7 +2,7 @@ package gout
 
 import (
 	"fmt"
-	"reflect"
+	"slices"
 	"testing"
 )
 
@@ -17,9 +17,9 @@ func newTestRouter() *router {
 }
 
 func TestParsePath(t *testing.T) {
-	ok := reflect.DeepEqual(parsePattern("/p/:name"), []string{"p", ":name"})
-	ok = ok && reflect.DeepEqual(parsePattern("/p/*"), []string{"p", "*"})
-	ok = ok && reflect.DeepEqual(parsePattern("/p/*name"), []string{"p", "*name"})
+	ok := slices.Equal(parsePattern("/p/:name"), []string{"p", ":name"})
+	ok = ok && slices.Equal(parsePattern("/p/*"), []string{"p", "*"})
+	ok = ok && slices.Equal(parsePattern("/p/*name"), []string{"p", "*name"})
 	if !ok {
 		t.Fatal("test parsePattern failed")
 	}
