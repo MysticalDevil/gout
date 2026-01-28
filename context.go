@@ -2,6 +2,7 @@ package gout
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -49,7 +50,7 @@ func (c *Context) Fail(code int, err string) {
 }
 
 func (c *Context) Param(key string) string {
-	value, _ := c.Params[key]
+	value := c.Params[key]
 	return value
 }
 
@@ -73,7 +74,7 @@ func (c *Context) SetHeader(key string, value string) {
 func (c *Context) String(code int, format string, values ...any) {
 	c.SetHeader("Content-Type", "text/plain")
 	c.Status(code)
-	c.Writer.Write([]byte(fmt.Sprintf(format, values...)))
+	fmt.Fprintf(c.Writer, format, values...)
 }
 
 func (c *Context) JSON(code int, obj any) {
@@ -96,4 +97,31 @@ func (c *Context) HTML(code int, name string, data any) {
 	if err := c.engine.htmlTemplates.ExecuteTemplate(c.Writer, name, data); err != nil {
 		c.Fail(http.StatusInternalServerError, err.Error())
 	}
+}
+
+func BindJSON[T any](c *Context) (T, error) {
+	var t T
+	if c.Req.Body == nil {
+		return t, errors.New("request body is empty")
+	}
+	decoder := json.NewDecoder(c.Req.Body)
+	if err := decoder.Decode(&t); err != nil {
+		return t, err
+	}
+	return t, nil
+}
+
+type DataResq[T any] struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Data T      `json:"data"`
+}
+
+func Success[T any](c *Context, data T) {
+	resp := DataResq[T]{
+		Code: 0,
+		Msg:  "success",
+		Data: data,
+	}
+	c.JSON(http.StatusOK, resp)
 }
