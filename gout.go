@@ -96,7 +96,7 @@ func (group *RouterGroup) PATCH(pattern string, handler HandlerFunc) {
 
 // OPTIONS defines the method to add OPTIONS request
 func (group *RouterGroup) OPTIONS(pattern string, handler HandlerFunc) {
-	group.addRoute("PUT", pattern, handler)
+	group.addRoute("OPTIONS", pattern, handler)
 }
 
 // HEAD defines the method to add HEAD request
