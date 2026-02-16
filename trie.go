@@ -16,7 +16,7 @@ type node struct {
 // matchChild finds the first child node that matches the given part.
 func (n *node) matchChild(part string) *node {
 	for _, child := range n.children {
-		if child.part == part && child.isWild {
+		if child.part == part || child.isWild {
 			return child
 		}
 	}
