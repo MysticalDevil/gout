@@ -12,7 +12,6 @@ func CORS() HandlerFunc {
 			"Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization",
 		)
 		c.SetHeader("Access-Control-Expose-Headers", "Content-Length")
-		c.SetHeader("Access-Control-Allow-Credentials", "true")
 
 		if c.Method == "OPTIONS" {
 			c.Status(http.StatusNoContent)
